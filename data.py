@@ -6,30 +6,19 @@ class Data:
             self.text = f.read()
         self.chars = sorted(list(set(self.text)))
         self.vocab_size = len(self.chars)
-
-        # Create mappings
         self.stoi = {ch: i for i, ch in enumerate(self.chars)}
-        self.itos = {i: ch for ch, i in self.stoi.items()}
+        self.itos = {i: ch for i, ch in enumerate(self.chars)}
+        self.encode = lambda s: [self.stoi[c] for c in s]
+        self.decode = lambda l: ''.join([self.itos[i] for i in l])
 
-        # Encode text to integers
-        self.data = torch.tensor([self.stoi[c] for c in self.text], dtype=torch.long)
+        data = torch.tensor(self.encode(self.text), dtype=torch.long)
+        n = int(0.9 * len(data))
+        self.train_data = data[:n]
+        self.val_data = data[n:]
 
-    def encode(self, text):
-        """Convert string to list of integers"""
-        return [self.stoi[ch] for ch in text]
-
-    def decode(self, indices):
-        """Convert list of integers to string"""
-        return ''.join([self.itos[i] for i in indices])
-
-    def get_splits(self, split_ratio=0.9):
-        """Split data into training and validation sets"""
-        n = int(len(self.data) * split_ratio)
-        return self.data[:n], self.data[n:]
-
-    def get_batch(self, split_data, batch_size, block_size):
-        """Generate a batch of input-output sequences"""
-        ix = torch.randint(len(split_data) - block_size, (batch_size,))
-        x = torch.stack([split_data[i:i+block_size] for i in ix])
-        y = torch.stack([split_data[i+1:i+block_size+1] for i in ix])
+    def get_batch(self, split, batch_size, block_size):
+        data = self.train_data if split == 'train' else self.val_data
+        ix = torch.randint(len(data) - block_size, (batch_size,))
+        x = torch.stack([data[i:i + block_size] for i in ix])
+        y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
         return x, y
