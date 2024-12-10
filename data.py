@@ -16,7 +16,7 @@ class Data:
         self.train_data = data[:n]
         self.val_data = data[n:]
         
-        def get_batch(self, split, batch_size, block_size):
+    def get_batch(self, split, batch_size, block_size):
         data = self.train_data if split == 'train' else self.val_data
         ix = torch.randint(len(data) - block_size, (batch_size,))
         x = torch.stack([data[i:i + block_size] for i in ix])
